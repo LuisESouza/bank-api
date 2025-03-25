@@ -4,7 +4,7 @@ import express from 'express';
 const routes = express.Router();
 
 //Post tranfer
-routes.post('/transfer');
+routes.post('/transfer', walletController.walletTransfer);
 
 //Put deposit
 routes.put('/deposit/:user_id', walletController.walletDeposit);
