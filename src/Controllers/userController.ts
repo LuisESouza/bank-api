@@ -23,7 +23,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
         const response = await prisma.registro.create({
             data: { nome, email, senha, cpf, type_user },
         });
-        const token = jwt.sign({ userId: response.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
+        const token = jwt.sign({ id: response.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
         return res.status(201).json({ token, user: { ...response, senha: undefined } });
     } catch (error) {
         return res.status(500).json({ message: "Erro ao registrar usuário", error });
@@ -48,7 +48,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
         const passwordMatch = await comparePassword(password, user.senha);
         if (!passwordMatch) return res.status(401).json({ message: "Senha inválida" });
         const wallet = await prisma.wallet.findUnique({ where: { user_id: user.id } });
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
         return res.status(200).json({ token, user: { ...user, senha: undefined }, wallet });
     } catch (error) {
         return res.status(500).json({ message: "Erro ao logar usuário", error });
