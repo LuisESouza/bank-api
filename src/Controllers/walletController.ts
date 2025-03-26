@@ -1,7 +1,6 @@
 import { isValidId, isValidNumber } from "../Utils/validation";
-import { processTransaction } from "../Utils/transactions";
 import { sendNotification } from "../Utils/notification";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import axios from "axios";
 
@@ -72,30 +71,6 @@ export const walletTransfer = async (req: Request, res: Response): Promise<any> 
         if (!isValidId(payerId) || !isValidId(payeeId) || !isValidNumber(transferValue) || transferValue <= 0) {
             return res.status(400).json({ message: "IDs ou valor da transferência inválidos!" });
         }
-        const payerInfo = await prisma.registro.findUnique({
-            where: { id: payerId },
-            select: { type_user: true },
-        });
-        if (!payerInfo) {
-            return res.status(404).json({ message: "Usuário remetente não encontrado!" });
-        }
-        if (payerInfo.type_user === "lojista") {
-            return res.status(403).json({ message: "Usuários lojistas não podem fazer transferências!" });
-        }
-        const payerWallet = await prisma.wallet.findUnique({
-            where: { user_id: payerId },
-            select: { saldo: true },
-        });
-        if (!payerWallet || payerWallet.saldo === null || new Prisma.Decimal(payerWallet.saldo).toNumber() < transferValue) {
-            return res.status(400).json({ message: "Saldo insuficiente!" });
-        }
-        const payeeWallet = await prisma.wallet.findUnique({
-            where: { user_id: payeeId },
-            select: { user_id: true },
-        });
-        if (!payeeWallet) {
-            return res.status(404).json({ message: "Usuário destinatário não encontrado!" });
-        }
         const authResponse = await axios.get("https://util.devi.tools/api/v2/authorize");
         const { status, data } = authResponse.data;
         if (!status || !data) {
@@ -104,9 +79,14 @@ export const walletTransfer = async (req: Request, res: Response): Promise<any> 
         if (status === "error" || (status === "fail" && data.authorization === false)) {
             return res.status(403).json({ message: "Transação não autorizada pelo serviço externo!" });
         }
-        await processTransaction(payerId, payeeId, transferValue);
-        await sendNotification(payeeId, "Você recebeu um pagamento!");
-        return res.status(200).json({ message: "Transferência realizada com sucesso!" });
+        const result = await prisma.$queryRaw`SELECT TRANSFERIR_SALDO(${payerId}, ${payeeId}, ${transferValue})`;
+        const transferResult = result as [{ transferir_saldo: number }];
+        if (transferResult[0].transferir_saldo === 1) {
+            await sendNotification(payeeId, "Você recebeu um pagamento!");
+            return res.status(200).json({ message: "Transferência realizada com sucesso!" });
+        } else {
+            return res.status(400).json({ message: "Erro ao realizar a transferência!" });
+        }
     } catch (error) {
         return res.status(500).json({ message: "Erro interno ao processar a transferência!", error });
     }
