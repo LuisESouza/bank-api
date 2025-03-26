@@ -7,5 +7,5 @@ const routes = express.Router();
 routes.post('/transfer', walletController.walletTransfer);
 
 //Put deposit
-routes.put('/deposit/:user_id', walletController.walletDeposit);
+routes.put('/deposit/', walletController.walletDeposit);
 export default routes;
