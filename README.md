@@ -77,10 +77,10 @@ Agora a API estará disponível localmente, e você poderá fazer requisições 
 ```json
 {
   "nome": "Luis",
-	"email": "Luis@exemplo.com",
-	"password": "senha123",
-	"cpf": "00000000000",
-	"type_user": "comum ou lojista"
+  "email": "Luis@exemplo.com",
+  "password": "senha123",
+  "cpf": "00000000000",
+  "type_user": "comum ou lojista"
 }
 ```
 
@@ -120,7 +120,7 @@ Agora a API estará disponível localmente, e você poderá fazer requisições 
   "id": 3,
   "user_id": 11,
   "saldo": "11480.94",
-	"updated_at": "2025-03-26T15:55:26.655Z"
+  "updated_at": "2025-03-26T15:55:26.655Z"
 }
 ```
 
